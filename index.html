@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Town and Tornadoes Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(10, 20px);
+            grid-template-rows: repeat(10, 20px);
+            gap: 2px;
+        }
+        .cell {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ccc;
+            font-size: 12px;
+        }
+        .town {
+            background-color: lightgreen;
+        }
+        .tornado {
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Town and Tornadoes Simulation</h1>
+    <div id="grid"></div>
+    <div>
+        <label for="newLocation">Enter new town location (x,y): </label>
+        <input type="text" id="newLocation" placeholder="e.g., 3,4">
+        <button onclick="moveTownManually()">Move Town</button>
+    </div>
+    <button onclick="simulate()">Start Simulation</button>
+    <script>
+        const rows = 10; // Количество строк в массиве
+        const cols = 10; // Количество столбцов в массиве
+        const tornadoesCount = 5; // Количество смерчей
+
+        // Создание двумерного массива
+        function createGrid(rows, cols) {
+            return Array.from({ length: rows }, () => Array(cols).fill(0));
+        }
+
+        // Размещение смерчей случайным образом
+        function placeTornadoes(grid, tornadoesCount) {
+            let tornadoes = [];
+            while (tornadoes.length < tornadoesCount) {
+                let x = Math.floor(Math.random() * rows);
+                let y = Math.floor(Math.random() * cols);
+                if (grid[x][y] === 0) {
+                    grid[x][y] = 1;
+                    tornadoes.push([x, y]);
+                }
+            }
+            return tornadoes;
+        }
+
+        // Инициализация положения городка
+        let town = { x: Math.floor(rows / 2), y: Math.floor(cols / 2) };
+
+        // Функция для отображения массива
+        function displayGrid(grid, town) {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    if (i === town.x && j === town.y) {
+                        cell.classList.add('town');
+                        cell.textContent = 'T';
+                    } else if (grid[i][j] === 1) {
+                        cell.classList.add('tornado');
+                        cell.textContent = 'X';
+                    }
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        // Перемещение смерчей случайным образом
+        function moveTornadoes(grid, tornadoes) {
+            for (let tornado of tornadoes) {
+                let [x, y] = tornado;
+                grid[x][y] = 0; // Убираем старое положение смерча
+                let newX = x + Math.floor(Math.random() * 3) - 1;
+                let newY = y + Math.floor(Math.random() * 3) - 1;
+                newX = Math.max(0, Math.min(rows - 1, newX)); // Ограничение по границам массива
+                newY = Math.max(0, Math.min(cols - 1, newY));
+                grid[newX][newY] = 1;
+                tornado[0] = newX;
+                tornado[1] = newY;
+            }
+        }
+
+        // Перемещение городка вручную
+        function moveTownManually() {
+            const input = document.getElementById('newLocation').value;
+            const [x, y] = input.split(',').map(Number);
+            if (x >= 0 && x < rows && y >= 0 && y < cols) {
+                town.x = x;
+                town.y = y;
+                displayGrid(grid, town);
+            } else {
+                alert('Invalid location. Please enter values within the grid range.');
+            }
+        }
+
+        // Главная функция для симуляции
+        function simulate() {
+            let grid = createGrid(rows, cols);
+            let tornadoes = placeTornadoes(grid, tornadoesCount);
+
+            let iteration = 0;
+            const interval = setInterval(() => {
+                if (iteration >= 10) {
+                    clearInterval(interval);
+                    return;
+                }
+                console.log(`Iteration ${iteration + 1}:`);
+                displayGrid(grid, town);
+                moveTornadoes(grid, tornadoes);
+                iteration++;
+            }, 1000); // Интервал 1 секунда
+        }
+    </script>
+</body>
+</html>
